@@ -226,14 +226,16 @@ public final class YoutubePlayerPlugin: CAPPlugin, CAPBridgedPlugin, YTPlayerVie
 
     @objc func setVolume(_ call: CAPPluginCall) {
 
-        guard let id = call.getString("playerId"),
-              let player = getPlayer(id) else {
+        guard let playerId = call.getString("playerId"),
+            let player = getPlayer(playerId) else {
             call.reject("Player not found")
             return
         }
 
         let volume = call.getInt("volume") ?? 50
-        player.setVolume(UInt(volume))
+
+        let js = "player.setVolume(\(volume));"
+        player.evaluateJavaScript(js, completionHandler: nil)
 
         call.resolve([
             "result": [
@@ -245,20 +247,28 @@ public final class YoutubePlayerPlugin: CAPPlugin, CAPBridgedPlugin, YTPlayerVie
 
     @objc func getVolume(_ call: CAPPluginCall) {
 
-        guard let id = call.getString("playerId"),
-              let player = getPlayer(id) else {
+        guard let playerId = call.getString("playerId"),
+            let player = getPlayer(playerId) else {
             call.reject("Player not found")
             return
         }
 
-        let volume = player.volume()
+        player.evaluateJavaScript("player.getVolume();") { result, error in
 
-        call.resolve([
-            "result": [
-                "method": "getVolume",
-                "value": volume
-            ]
-        ])
+            if let error = error {
+                call.reject("Failed to get volume: \(error.localizedDescription)")
+                return
+            }
+
+            let volume = result as? Int ?? 0
+
+            call.resolve([
+                "result": [
+                    "method": "getVolume",
+                    "value": volume
+                ]
+            ])
+        }
     }
 
     // MARK: - Time
