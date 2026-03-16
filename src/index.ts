@@ -1,10 +1,11 @@
 import { registerPlugin } from '@capacitor/core';
 
-import type { YoutubePlayerPlugin } from './definitions';
+export interface YoutubePlayerPlugin {
+  play(options: { videoId: string }): Promise<{ status: string }>;
+}
 
 const YoutubePlayer = registerPlugin<YoutubePlayerPlugin>('YoutubePlayer', {
-  web: () => import('./web').then((m) => new m.YoutubePlayerWeb()),
+  web: () => import('./web').then(m => new m.YoutubePlayerWeb()),
 });
 
-export * from './definitions';
 export { YoutubePlayer };
